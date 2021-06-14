@@ -111,3 +111,4 @@ artifacts
 SnowballWallets.json
 .DS_Store
 flat/
+hardhat.config.js
