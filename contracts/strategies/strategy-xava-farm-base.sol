@@ -6,15 +6,17 @@ import "../interfaces/farming-xava.sol";
 
 abstract contract StrategyXAVAFarmBase is StrategyBase {
     // Token addresses
-    address public xava = 0xd1c3f94de7e5b45fa4edbba472491a9f4b166fc4;
-    address public farmingXava = 0xE82AAE7fc62547BdFC36689D0A83dE36FF034A68;
-
+    address public constant xava = 0xd1c3f94DE7e5B45fa4eDBBA472491a9f4B166FC4;
+    address public constant farmingXava = 0xE82AAE7fc62547BdFC36689D0A83dE36FF034A68;
+    
     // WAVAX/<token1> pair
     address public token1;
 
     // How much XAVA tokens to keep?
     uint256 public keepXAVA = 0;
     uint256 public constant keepXAVAMax = 10000;
+
+    uint256 public poolId;
 
     constructor(
         address _token1,
@@ -77,7 +79,7 @@ abstract contract StrategyXAVAFarmBase is StrategyBase {
     function harvest() public override onlyBenevolent {
         // Anyone can harvest it at any given time.
         // I understand the possibility of being frontrun
-        // But ETH is a dark forest, and I wanna see how this plays out
+        // But AVAX is a dark forest, and I wanna see how this plays out
         // i.e. will be be heavily frontrunned?
         //      if so, a new strategy will be deployed.
 
@@ -92,25 +94,25 @@ abstract contract StrategyXAVAFarmBase is StrategyBase {
                 _keepXAVA
             );
             uint256 _swap = _xava.sub(_keepXAVA);
-            IERC20(xava).safeApprove(xavaRouter, 0);
-            IERC20(xava).safeApprove(xavaRouter, _swap);
-            _swapXavaswap(xava, wavax, _swap);
+            IERC20(xava).safeApprove(pangolinRouter, 0);
+            IERC20(xava).safeApprove(pangolinRouter, _swap);
+            _swapXava(xava, wavax, _swap);
         }
 
         // Swap half WAVAX for token1
         uint256 _wavax = IERC20(wavax).balanceOf(address(this));
         if (_wavax > 0) {
-            _swapXavaswap(wavax, token1, _wavax.div(2));
+            _swapXava(wavax, token1, _wavax.div(2));
         }
 
-        // Adds in liquidity for ETH/token1
+        // Adds in liquidity for AVAX/token1
         _wavax = IERC20(wavax).balanceOf(address(this));
         uint256 _token1 = IERC20(token1).balanceOf(address(this));
         if (_wavax > 0 && _token1 > 0) {
-            IERC20(token1).safeApprove(xavaRouter, 0);
-            IERC20(token1).safeApprove(xavaRouter, _token1);
+            IERC20(token1).safeApprove(pangolinRouter, 0);
+            IERC20(token1).safeApprove(pangolinRouter, _token1);
 
-            UniswapRouterV2(xavaRouter).addLiquidity(
+            IPangolinRouter(pangolinRouter).addLiquidity(
                 wavax,
                 token1,
                 _wavax,
@@ -135,4 +137,34 @@ abstract contract StrategyXAVAFarmBase is StrategyBase {
         // We want to get back XAVA LP tokens
         _distributePerformanceFeesAndDeposit();
     }
+
+    function _swapXava(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal {
+        require(_to != address(0));
+
+        address[] memory path;
+
+        if (_from == wavax || _to == wavax) {
+            path = new address[](2);
+            path[0] = _from;
+            path[1] = _to;
+        } else {
+            path = new address[](3);
+            path[0] = _from;
+            path[1] = wavax;
+            path[2] = _to;
+        }
+
+        IPangolinRouter(pangolinRouter).swapExactTokensForTokens(
+            _amount,
+            0,
+            path,
+            address(this),
+            now.add(60)
+        );
+    }
+
 }

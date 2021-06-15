@@ -7,7 +7,9 @@ import "../interfaces/globe.sol";
 import "../interfaces/staking-rewards.sol";
 import "../interfaces/icequeen.sol";
 import "../interfaces/pangolin.sol";
+import "../interfaces/farming-xava.sol";
 import "../interfaces/controller.sol";
+
 
 // Strategy Contract Basics
 

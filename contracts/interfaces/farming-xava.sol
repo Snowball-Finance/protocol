@@ -2,53 +2,66 @@
 pragma solidity ^0.6.2;
 
 interface IFarmingXava {
-    function balanceOf(address account) external view returns (uint256);
+    // Reads
+    function deposited(uint256 poolId, address account) external view returns (uint256);
 
-    function earned(address account) external view returns (uint256);
+    function endTimestamp() external view returns (uint256);
 
-    function exit() external;
+    function erc20() external view returns (address);
 
-    function getReward() external;
+    function owner() external view returns (address);
 
-    function getRewardForDuration() external view returns (uint256);
+    function paidOut() external view returns (uint256);
 
-    function lastTimeRewardApplicable() external view returns (uint256);
+    function pending(uint256 poolId, address account) external view returns (uint256);
 
-    function lastUpdateTime() external view returns (uint256);
+    function poolInfo(uint256 poolId) external view returns (
+        IERC20 lpToken,                 // Address of LP token contract.
+        uint256 allocPoint,             // How many allocation points assigned to this pool. ERC20s to distribute per block.
+        uint256 lastRewardTimestamp,    // Last timstamp that ERC20s distribution occurs.
+        uint256 accERC20PerShare,       // Accumulated ERC20s per share, times 1e36.
+        uint256 totalDeposits           // Total amount of tokens deposited at the moment (staked)
+    );
 
-    function notifyRewardAmount(uint256 reward) external;
+    function poolLength() external view returns (uint256);
 
-    function periodFinish() external view returns (uint256);
+    function rewardPerSecond() external view returns (uint256);
 
-    function rewardPerToken() external view returns (uint256);
+    function startTimestamp() external view returns (uint256);
 
-    function rewardPerTokenStored() external view returns (uint256);
+    function totalAllocPoint() external view returns (uint256);
 
-    function rewardRate() external view returns (uint256);
+    function totalPending() external view returns (uint256);
 
-    function rewards(address) external view returns (uint256);
+    function totalRewards() external view returns (uint256);
 
     function rewardsDistribution() external view returns (address);
 
-    function rewardsDuration() external view returns (uint256);
-
-    function rewardsToken() external view returns (address);
-
-    function stake(uint256 amount) external;
-
-    function stakeWithPermit(
+    function userInfo(uint256 poolId, address account) external view returns (
         uint256 amount,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external;
+        uint256 rewardDebt
+    );
+    
 
-    function stakingToken() external view returns (address);
+    // Writes
 
-    function totalSupply() external view returns (uint256);
+    function add(uint256 allocPoint, address lpToken, bool withUpdate) external;
 
-    function userRewardPerTokenPaid(address) external view returns (uint256);
+    function deposit(uint256 poolId, uint256 amount) external;
 
-    function withdraw(uint256 amount) external;
+    function emergencyWithdraw(uint256 poolId) external;
+
+    function fund(uint256 amount) external;
+
+    function massUpdatePools() external;
+
+    function renounceOwnership() external;
+
+    function set(uint256 poolId, uint256 allocPoint, bool withUpdate) external;
+
+    function transferOwnership(address newOwner) external;
+
+    function updatePool(uint256 poolId) external;
+
+    function withdraw(uint256 poolId, uint256 amount) external;
 }

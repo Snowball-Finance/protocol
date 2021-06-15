@@ -8,7 +8,7 @@ contract StrategyXavaAvaxXavaLp is StrategyXAVAFarmBase {
     uint256 public avax_xava_poolId = 0;
     // Token addresses
     address public xava_avax_xava_lp = 0x42152bDD72dE8d6767FE3B4E17a221D6985E8B25;
-    address public avax = 0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7;
+    address public avax = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
 
     constructor(
         address _governance,
