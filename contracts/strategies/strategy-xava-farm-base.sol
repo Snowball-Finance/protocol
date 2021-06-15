@@ -2,7 +2,7 @@
 pragma solidity ^0.6.7;
 
 import "./strategy-base.sol";
-import "./interfaces/farming-xava.sol";
+import "../interfaces/farming-xava.sol";
 
 abstract contract StrategyXAVAFarmBase is StrategyBase {
     // Token addresses
