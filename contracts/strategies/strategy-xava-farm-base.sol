@@ -9,7 +9,7 @@ abstract contract StrategyXAVAFarmBase is StrategyBase {
     address public constant xava = 0xd1c3f94DE7e5B45fa4eDBBA472491a9f4B166FC4;
     address public constant farmingXava = 0xE82AAE7fc62547BdFC36689D0A83dE36FF034A68;
     
-    // WAVAX/<token1> pair
+    // XAVA/<token1> pair
     address public token1;
 
     // How much XAVA tokens to keep?
@@ -93,29 +93,24 @@ abstract contract StrategyXAVAFarmBase is StrategyBase {
                 IController(controller).treasury(),
                 _keepXAVA
             );
-            uint256 _swap = _xava.sub(_keepXAVA);
+            // Swap half XAVA for AVAX
+            uint256 _swap = _xava.sub(_keepXAVA).div(2);
             IERC20(xava).safeApprove(pangolinRouter, 0);
             IERC20(xava).safeApprove(pangolinRouter, _swap);
             _swapXava(xava, wavax, _swap);
         }
 
-        // Swap half WAVAX for token1
-        uint256 _wavax = IERC20(wavax).balanceOf(address(this));
-        if (_wavax > 0) {
-            _swapXava(wavax, token1, _wavax.div(2));
-        }
-
-        // Adds in liquidity for AVAX/token1
-        _wavax = IERC20(wavax).balanceOf(address(this));
+        // Adds in liquidity for XAVA/token1
+        _xava = IERC20(xava).balanceOf(address(this));
         uint256 _token1 = IERC20(token1).balanceOf(address(this));
-        if (_wavax > 0 && _token1 > 0) {
+        if (_xava > 0 && _token1 > 0) {
             IERC20(token1).safeApprove(pangolinRouter, 0);
             IERC20(token1).safeApprove(pangolinRouter, _token1);
 
             IPangolinRouter(pangolinRouter).addLiquidity(
-                wavax,
+                xava,
                 token1,
-                _wavax,
+                _xava,
                 _token1,
                 0,
                 0,
@@ -124,13 +119,17 @@ abstract contract StrategyXAVAFarmBase is StrategyBase {
             );
 
             // Donates DUST
-            IERC20(wavax).transfer(
+            IERC20(xava).transfer(
                 IController(controller).treasury(),
-                IERC20(wavax).balanceOf(address(this))
+                IERC20(xava).balanceOf(address(this))
             );
             IERC20(token1).safeTransfer(
                 IController(controller).treasury(),
                 IERC20(token1).balanceOf(address(this))
+            );
+            IERC20(wavax).safeTransfer(
+                IController(controller).treasury(),
+                IERC20(wavax).balanceOf(address(this))
             );
         }
 
