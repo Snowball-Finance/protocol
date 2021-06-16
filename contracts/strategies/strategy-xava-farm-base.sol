@@ -89,10 +89,12 @@ abstract contract StrategyXAVAFarmBase is StrategyBase {
         if (_xava > 0) {
             // 10% is locked up for future gov
             uint256 _keepXAVA = _xava.mul(keepXAVA).div(keepXAVAMax);
-            IERC20(xava).safeTransfer(
-                IController(controller).treasury(),
-                _keepXAVA
-            );
+            if (_keepXAVA > 0) {
+                IERC20(xava).safeTransfer(
+                    IController(controller).treasury(),
+                    _keepXAVA
+                );
+            }
             // Swap half XAVA for AVAX
             uint256 _swap = _xava.sub(_keepXAVA).div(2);
             IERC20(xava).safeApprove(pangolinRouter, 0);
@@ -127,10 +129,12 @@ abstract contract StrategyXAVAFarmBase is StrategyBase {
                 IController(controller).treasury(),
                 IERC20(token1).balanceOf(address(this))
             );
-            IERC20(wavax).safeTransfer(
-                IController(controller).treasury(),
-                IERC20(wavax).balanceOf(address(this))
-            );
+            if (token1 != wavax) {
+                IERC20(wavax).safeTransfer(
+                    IController(controller).treasury(),
+                    IERC20(wavax).balanceOf(address(this))
+                );
+            }
         }
 
         // We want to get back XAVA LP tokens
