@@ -9,7 +9,7 @@ abstract contract StrategyXAVAFarmBase is StrategyBase {
     address public constant xava = 0xd1c3f94DE7e5B45fa4eDBBA472491a9f4B166FC4;
     address public constant farmingXava = 0xE82AAE7fc62547BdFC36689D0A83dE36FF034A68;
     
-    // XAVA/<token1> pair
+    // within the XAVA/<token1> pair
     address public token1;
 
     // How much XAVA tokens to keep?
@@ -84,7 +84,7 @@ abstract contract StrategyXAVAFarmBase is StrategyBase {
         //      if so, a new strategy will be deployed.
 
         // Collects XAVA tokens
-        IFarmingXava(farmingXava).deposit(poolId, 0);
+        IFarmingXava(farmingXava).withdraw(poolId, 0);
         uint256 _xava = IERC20(xava).balanceOf(address(this));
         if (_xava > 0) {
             // 10% is locked up for future gov
@@ -95,50 +95,45 @@ abstract contract StrategyXAVAFarmBase is StrategyBase {
                     _keepXAVA
                 );
             }
-            // Swap half XAVA for AVAX
-            uint256 _swap = _xava.sub(_keepXAVA).div(2);
-            IERC20(xava).safeApprove(pangolinRouter, 0);
-            IERC20(xava).safeApprove(pangolinRouter, _swap);
-            _swapXava(xava, wavax, _swap);
-        }
+            // Swap half XAVA for token1
+            uint256 _swap = IERC20(xava).balanceOf(address(this));
+            _swapXava(xava, token1, _swap.div(2));
 
-        // Adds in liquidity for XAVA/token1
-        _xava = IERC20(xava).balanceOf(address(this));
-        uint256 _token1 = IERC20(token1).balanceOf(address(this));
-        if (_xava > 0 && _token1 > 0) {
-            IERC20(token1).safeApprove(pangolinRouter, 0);
-            IERC20(token1).safeApprove(pangolinRouter, _token1);
+            // Adds in liquidity for XAVA/token1
+            _xava = IERC20(xava).balanceOf(address(this));
+            uint256 _token1 = IERC20(token1).balanceOf(address(this));
+            if (_xava > 0 && _token1 > 0) {
+                IERC20(xava).safeApprove(pangolinRouter, 0);
+                IERC20(xava).safeApprove(pangolinRouter, _xava);
 
-            IPangolinRouter(pangolinRouter).addLiquidity(
-                xava,
-                token1,
-                _xava,
-                _token1,
-                0,
-                0,
-                address(this),
-                now + 60
-            );
+                IERC20(token1).safeApprove(pangolinRouter, 0);
+                IERC20(token1).safeApprove(pangolinRouter, _token1);
 
-            // Donates DUST
-            IERC20(xava).transfer(
-                IController(controller).treasury(),
-                IERC20(xava).balanceOf(address(this))
-            );
-            IERC20(token1).safeTransfer(
-                IController(controller).treasury(),
-                IERC20(token1).balanceOf(address(this))
-            );
-            if (token1 != wavax) {
-                IERC20(wavax).safeTransfer(
+                IPangolinRouter(pangolinRouter).addLiquidity(
+                    xava,
+                    token1,
+                    _xava,
+                    _token1,
+                    0,
+                    0,
+                    address(this),
+                    now + 60
+                );
+
+                // Donates DUST
+                IERC20(xava).transfer(
                     IController(controller).treasury(),
-                    IERC20(wavax).balanceOf(address(this))
+                    IERC20(xava).balanceOf(address(this))
+                );
+                IERC20(token1).safeTransfer(
+                    IController(controller).treasury(),
+                    IERC20(token1).balanceOf(address(this))
                 );
             }
-        }
 
-        // We want to get back XAVA LP tokens
-        _distributePerformanceFeesAndDeposit();
+            // We want to get back XAVA LP tokens
+            _distributePerformanceFeesAndDeposit();
+        }
     }
 
     function _swapXava(
@@ -150,14 +145,14 @@ abstract contract StrategyXAVAFarmBase is StrategyBase {
 
         address[] memory path;
 
-        if (_from == wavax || _to == wavax) {
+        if (_from == xava || _to == xava) { // now assuming xava
             path = new address[](2);
             path[0] = _from;
             path[1] = _to;
         } else {
             path = new address[](3);
             path[0] = _from;
-            path[1] = wavax;
+            path[1] = wavax; // if neither token is xava, it should still use wavax as intermediary
             path[2] = _to;
         }
 
