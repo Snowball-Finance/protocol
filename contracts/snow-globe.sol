@@ -7,7 +7,9 @@ import "./interfaces/controller.sol";
 import "./lib/erc20.sol";
 import "./lib/safe-math.sol";
 
-contract SnowGlobe is ERC20 {
+// Please rename contract prior to deployment
+// Example: SnowGlobePngAvaxSnob
+contract SnowGlobe is ERC20 { 
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
@@ -29,7 +31,7 @@ contract SnowGlobe is ERC20 {
         )
     {
         _setupDecimals(ERC20(_token).decimals());
-        token = IERC20(_token);
+        token = IERC20(_token); // PGL Token (Liquidity Pair)
         governance = _governance;
         timelock = _timelock;
         controller = _controller;
